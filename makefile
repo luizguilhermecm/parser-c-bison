@@ -1,11 +1,21 @@
-.PHONY: lex.yy.c
-.PHONY: a.out
+FLEX=flex
+BISON=bison
+CC=gcc
 
-lex.yy.c: lexico.l
-	flex lexico.l
+PROGRAM = language-c
+LEXICAL = lexical-c.l
+SYNTAX = syntax-c.y
 
-a.out: lex.yy.c
-	cc lex.yy.c -lfl
-	
-run: ./a.out 
-	./a.out
+
+$(PROGRAM): $(LEXICAL) $(SYNTAX)
+	$(BISON) -d $(SYNTAX)
+	$(FLEX) $(LEXICAL)
+	$(CC) -c *.c -I.
+	$(CC) *.o -o $(PROGRAM)
+
+clean:
+	rm -f *.yy.c
+	rm -f *.tab.c
+	rm -f *.tab.h
+	rm -f *.o
+	rm -f *.exe
