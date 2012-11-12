@@ -6,6 +6,8 @@ PROGRAM = language-c
 LEXICAL = lexical-c.l
 SYNTAX = syntax-c.y
 
+.PHONY: language-c
+
 
 $(PROGRAM): $(LEXICAL) $(SYNTAX)
 	$(BISON) -d $(SYNTAX)
@@ -19,3 +21,6 @@ clean:
 	rm -f *.tab.h
 	rm -f *.o
 	rm -f *.exe
+
+teste:
+	./language-c < teste

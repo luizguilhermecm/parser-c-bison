@@ -1,8 +1,10 @@
 %option noyywrap
 %{
-  int i = 0;
-  int chars = 1;
-  int lines = 1;
+#include <syntax-c.tab.h>
+
+        int i = 0;
+        int chars = 1;
+        int lines = 1;
 %}
 
 %%
@@ -41,6 +43,7 @@
 \"(\\.|\"\"|[^"\n])*\"   { printf("STRING(%s)\n",yytext)      ; chars += strlen(yytext) ; return STRING ;}
 [a-zA-Z_][a-zA-Z0-9_]*   { printf("IDENTIFIER(%s)\n",yytext)  ; chars += strlen(yytext) ; return IDENTIFIER ;}
 
+"/"  { printf("DIV\n")                 ;  chars += strlen(yytext); return DIV                 ;}
 "+"  { printf("PLUS\n")                ;  chars += strlen(yytext); return PLUS                ;}
 "-"  { printf("MINUS\n")               ;  chars += strlen(yytext); return MINUS               ;}
 "*"  { printf("MULTIPLY\n")            ;  chars += strlen(yytext); return MULTIPLY            ;}
@@ -74,7 +77,6 @@
 "?"  { printf("TERNARY_CONDITIONAL\n") ;  chars += strlen(yytext); return TERNARY_CONDITIONAL ;}
 "#"  { printf("NUMBER_SIGN\n")         ;  chars += strlen(yytext); return NUMBER_SIGN         ;}
 ";"  { printf("SEMICOLON\n")           ;  chars += strlen(yytext); return SEMICOLON           ;}
-
 
   /* erro genérico */
 .  { printf("ERRO: LINHA: %d,COLUNA:%d\n",lines, chars);} /* qualquer outro caracter */
