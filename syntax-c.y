@@ -9,12 +9,14 @@ int count = 0;
 void inOrder(TreeNode* aux)
 {
         if(aux != NULL){
-                count++;
                 inOrder(aux->one);
                 inOrder(aux->two);
                 inOrder(aux->three);
                 inOrder(aux->four);
                 printf("%d - ", aux->node_type);
+                if(aux->node_type == DEFINE){
+                        printf("DEFINE");
+                }
         }
 }
 
@@ -159,6 +161,7 @@ declaracoes:
            NUMBER_SIGN DEFINE IDENTIFIER expressao {
                         TreeNode* aux = newNode($4, NULL, NULL, NULL);
                         setType(aux, DEFINE);
+                        $$ = aux;
                 }
            | declaracao_variaveis {$$ = $1}
            | declaracao_prototipos {$$ = $1}
