@@ -1,12 +1,27 @@
 %{
 
 #include <stdio.h>
-
+#include <node.h>
 extern int yylex();
+
+TreeNode* AST = NULL;
+int count = 0;
+void inOrder(TreeNode* aux)
+{
+        if(aux != NULL){
+                count++;
+                inOrder(aux->one);
+                inOrder(aux->two);
+                inOrder(aux->three);
+                inOrder(aux->four);
+                printf("%d - ", aux->node_type);
+        }
+}
 
 %}
 
 %union{
+        TreeNode* ast;
 }
 
 %token VOID
@@ -26,7 +41,6 @@ extern int yylex();
 %token SCANF
 %token DEFINE
 %token EXIT
-%token DIV
 %token PLUS
 %token MINUS
 %token MULTIPLY
@@ -67,248 +81,541 @@ extern int yylex();
 %token STRING
 %token IDENTIFIER
 
-%start programa
+%type <ast> programa
+%type <ast> declaracoes
+%type <ast> funcao
+%type <ast> foo_funcao
+%type <ast> declaracao_variaveis
+%type <ast> foo_declaracao_variaveis
+%type <ast> bar_declaracao_variaveis
+%type <ast> declaracao_prototipos
+%type <ast> parametros
+%type <ast> foo_parametros
+%type <ast> tipo
+%type <ast> comandos
+%type <ast> bloco
+%type <ast> lista_comandos
+%type <ast> foo_for
+%type <ast> bar_for
+%type <ast> foo_else
+%type <ast> foo_printf
+%type <ast> expressao
+%type <ast> foo_expressao
+%type <ast> expressao_condicional
+%type <ast> expressao_or_logico
+%type <ast> foo_expressao_or_logico
+%type <ast> expressao_and_logico
+%type <ast> expressao_or
+%type <ast> foo_expressao_or
+%type <ast> expressao_xor
+%type <ast> foo_expressao_xor
+%type <ast> expressao_and
+%type <ast> foo_expressao_and
+%type <ast> expressao_igualdade
+%type <ast> foo_expressao_igualdade
+%type <ast> foo_expressao_and_logico
+%type <ast> expressao_relacional
+%type <ast> foo_expressao_relacional
+%type <ast> expressao_shift
+%type <ast> foo_expressao_shift
+%type <ast> expressao_aditiva
+%type <ast> foo_expressao_aditiva
+%type <ast> expressao_multiplicativa
+%type <ast> foo_expressao_multiplicativa
+%type <ast> expressao_unaria
+%type <ast> foo_expressao_unaria
+%type <ast> numero
+
+
+%start first
 
 %%
+first:
+     programa { 
+                AST = $1;
+                if(AST){
+                        inOrder(AST);
+                }
+                else 
+                        printf("erro");
+                
+        }
+     ;
+
 programa:
-        declaracoes
-        | funcao
-        | declaracoes programa
-        | funcao programa
+        declaracoes {$$ = $1}
+        | funcao {$$ = $1}
+        | declaracoes programa {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
+        | funcao programa {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
         ;
 
 declaracoes: 
-           NUMBER_SIGN DEFINE IDENTIFIER expressao
-           | declaracao_variaveis
-           | declaracao_prototipos
+           NUMBER_SIGN DEFINE IDENTIFIER expressao {
+                        TreeNode* aux = newNode($4, NULL, NULL, NULL);
+                        setType(aux, DEFINE);
+                }
+           | declaracao_variaveis {$$ = $1}
+           | declaracao_prototipos {$$ = $1}
            ;
 
 funcao:
-      tipo IDENTIFIER parametros L_CURLY_BRACKET comandos R_BRACE_BRACKET
-      | tipo IDENTIFIER parametros L_CURLY_BRACKET foo_funcao comandos R_BRACE_BRACKET
-      ;
-
+      tipo IDENTIFIER parametros L_CURLY_BRACKET comandos R_BRACE_BRACKET {
+                        TreeNode* aux = newNode($1,$3,$5,NULL);
+                        $$ = aux;
+                }
+      | tipo IDENTIFIER parametros L_CURLY_BRACKET foo_funcao comandos R_BRACE_BRACKET {
+                        TreeNode* aux = newNode($1,$3,$5,$6);
+                        $$ = aux;
+                }
+      ; 
+ 
 foo_funcao:
-          declaracao_variaveis
-          | declaracao_variaveis foo_funcao
+          declaracao_variaveis {$$ = $1}
+          | declaracao_variaveis foo_funcao{
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
           ;
 
 declaracao_variaveis:
-                    tipo foo_declaracao_variaveis
+                    tipo foo_declaracao_variaveis {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                     ;
 
 foo_declaracao_variaveis:
-                        IDENTIFIER bar_declaracao_variaveis
-                        | IDENTIFIER ASSIGN expressao bar_declaracao_variaveis
+                        IDENTIFIER bar_declaracao_variaveis{$$ = $2}
+                        | IDENTIFIER ASSIGN expressao bar_declaracao_variaveis{
+                                        TreeNode* aux = newNode($3,$4,NULL,NULL);
+                                        $$ = aux;
+                                }
                         ;
 
 bar_declaracao_variaveis:
-                         COMMA foo_declaracao_variaveis
-                        | SEMICOLON
+                         COMMA foo_declaracao_variaveis{$$ = $2}
+                        | SEMICOLON{$$ = NULL}
                         ;
 
 declaracao_prototipos:
-                   tipo IDENTIFIER parametros SEMICOLON
+                   tipo IDENTIFIER parametros SEMICOLON{
+                                TreeNode* aux = newNode($1,$3,NULL,NULL);
+                                $$ = aux;
+                        }
                    ;
 
 parametros:
-          L_PAREN R_PAREN
-          | L_PAREN foo_parametros R_PAREN
+          L_PAREN R_PAREN{$$ = NULL}
+          | L_PAREN foo_parametros R_PAREN{$$ = $2}
           ;
 
 foo_parametros:
-              tipo IDENTIFIER
-              | tipo IDENTIFIER COMMA foo_parametros
+              tipo IDENTIFIER{$$ = $1}
+              | tipo IDENTIFIER COMMA foo_parametros{
+                        TreeNode* aux = newNode($1,$4,NULL,NULL);
+                        $$ = aux;
+                }
               ;
 
 tipo:
-    INT
-    | CHAR
-    | VOID
+    INT {$$ = NULL}
+    | CHAR {$$ = NULL}
+    | VOID {$$ = NULL}
     ;
 
 comandos:
-        lista_comandos
-        | lista_comandos comandos
+        lista_comandos{$$ = $1}
+        | lista_comandos comandos {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
         ;
 
 bloco:
-     L_CURLY_BRACKET comandos R_BRACE_BRACKET
+     L_CURLY_BRACKET comandos R_BRACE_BRACKET {$$ = $2}
      ;
 
 lista_comandos:
-                 DO bloco WHILE L_PAREN expressao R_PAREN SEMICOLON
-                 | IF L_PAREN expressao R_PAREN bloco ELSE foo_else
-                 | IF L_PAREN expressao R_PAREN bloco 
-                 | WHILE L_PAREN expressao R_PAREN bloco
-                 | FOR L_PAREN foo_for foo_for bar_for bloco
-                 | PRINTF L_PAREN STRING foo_printf R_PAREN SEMICOLON
-                 | SCANF L_PAREN STRING COMMA BITWISE_AND IDENTIFIER R_PAREN SEMICOLON
-                 | EXIT L_PAREN expressao R_PAREN SEMICOLON
-                 | RETURN SEMICOLON
-                 | RETURN L_PAREN expressao R_PAREN SEMICOLON
-                 | expressao SEMICOLON
-                 | SEMICOLON
-                 | bloco
+                 DO bloco WHILE L_PAREN expressao R_PAREN SEMICOLON {
+                                TreeNode* aux = newNode($2,$5,NULL,NULL);
+                                setType(aux,DO);
+                                $$ = aux;
+                        }
+                 | IF L_PAREN expressao R_PAREN bloco ELSE foo_else {
+                                TreeNode* aux = newNode($3,$5,$7,NULL);
+                                setType(aux,IF);
+                                $$ = aux;
+                        }
+                 | IF L_PAREN expressao R_PAREN bloco {
+                                TreeNode* aux = newNode($3,$5,NULL,NULL);
+                                setType(aux,IF);
+                                $$ = aux;
+                        }
+                 | WHILE L_PAREN expressao R_PAREN bloco {
+                                TreeNode* aux = newNode($3,$5,NULL,NULL);
+                                setType(aux,WHILE);
+                                $$ = aux;
+                        }
+                 | FOR L_PAREN foo_for foo_for bar_for bloco {
+                                TreeNode* aux = newNode($3,$4,$5,$6);
+                                setType(aux,FOR);
+                                $$ = aux;
+                        }
+                 | PRINTF L_PAREN STRING foo_printf R_PAREN SEMICOLON{
+                                TreeNode* aux = newNode($4,NULL,NULL,NULL);
+                                setType(aux,PRINTF);
+                                $$ = aux;
+                        }
+                 | SCANF L_PAREN STRING COMMA BITWISE_AND IDENTIFIER R_PAREN SEMICOLON {
+                                TreeNode *aux = newNode(NULL,NULL,NULL,NULL);
+                                setType(aux,SCANF);
+                                $$ = aux;
+                        }
+                 | EXIT L_PAREN expressao R_PAREN SEMICOLON {
+                                TreeNode *aux = newNode($3,NULL,NULL,NULL);
+                                setType(aux,EXIT);
+                                $$ = aux;
+                        }
+                 | RETURN SEMICOLON {
+                                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                                setType(aux,RETURN);
+                                $$ = aux;
+                        }
+                 | RETURN L_PAREN expressao R_PAREN SEMICOLON {
+                                TreeNode* aux = newNode($3,NULL,NULL,NULL);
+                                setType(aux,RETURN);
+                                $$ = aux;
+                        }
+                 | expressao SEMICOLON {$$ = $1}
+                 | SEMICOLON {$$ = NULL}
+                 | bloco {$$ = $1}
                  ;
 
 foo_for:
-       expressao SEMICOLON
-       | SEMICOLON
+       expressao SEMICOLON {$$ = $1}
+       | SEMICOLON {$$ = NULL}
        ;
 
 bar_for:
-       expressao R_PAREN
-       | R_PAREN
+       expressao R_PAREN{$$ = $1}
+       | R_PAREN {$$ = NULL}
        ;
 
 foo_else:
-        bloco
-        | L_CURLY_BRACKET R_BRACE_BRACKET
+        bloco {$$ = $1}
+        | L_CURLY_BRACKET R_BRACE_BRACKET {$$ = NULL}
         ;
 
 foo_printf:
-          COMMA expressao
-          | COMMA expressao foo_printf
+          COMMA expressao {$$ = $2}
+          | COMMA expressao foo_printf {
+                        TreeNode* aux = newNode($2,$3,NULL,NULL);
+                        $$ = aux;
+                }
           ;
 
 expressao:
-         expressao_condicional
-         | expressao_condicional foo_expressao
+         expressao_condicional {$$ = $1}
+         | expressao_condicional foo_expressao {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
          ;
 
 foo_expressao:
-             ASSIGN expressao
-             | ADD_ASSIGN expressao
-             | MINUS_ASSIGN expressao
+             ASSIGN expressao {
+                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                        setType(aux,ASSIGN);
+                        $$ = aux;
+                }
+             | ADD_ASSIGN expressao {
+                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                        setType(aux,ADD_ASSIGN);
+                        $$ = aux;
+                }
+             | MINUS_ASSIGN expressao {
+                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                        setType(aux,MINUS_ASSIGN);
+                        $$ = aux;
+                }
              ;
 
 expressao_condicional:
-                     expressao_or_logico
-                     | TERNARY_CONDITIONAL expressao_or_logico COLON expressao_or_logico
+                     expressao_or_logico {$$ = $1}
+                     | TERNARY_CONDITIONAL expressao_or_logico COLON expressao_or_logico {
+                                TreeNode* aux = newNode($2,$4,NULL,NULL);
+                                setType(aux,TERNARY_CONDITIONAL);
+                                $$ = aux;
+                        }
                      ;
 
 expressao_or_logico:
-                   expressao_and_logico
-                   | expressao_and_logico foo_expressao_or_logico
+                   expressao_and_logico {$$ = $1}
+                   | expressao_and_logico foo_expressao_or_logico {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                    ;
 
 foo_expressao_or_logico:
-                       LOGICAL_OR expressao_or_logico
+                       LOGICAL_OR expressao_or_logico {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,LOGICAL_OR);
+                                $$ = aux;
+                        }
                        ;
 
 expressao_and_logico:
-                    expressao_or 
-                    | expressao_or foo_expressao_and_logico
+                    expressao_or {$$ = $1}
+                    | expressao_or foo_expressao_and_logico {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                     ;
 
 foo_expressao_and_logico:
-                        LOGICAL_AND expressao_and_logico
+                        LOGICAL_AND expressao_and_logico {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,LOGICAL_AND);
+                                        $$ = aux;
+                                }
                         ;
 
 expressao_or:
-            expressao_xor
-            | expressao_xor foo_expressao_or
+            expressao_xor {$$ = $1}
+            | expressao_xor foo_expressao_or {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
             ;
 
 foo_expressao_or:
-                BITWISE_OR expressao_or
+                BITWISE_OR expressao_or {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,BITWISE_OR);
+                                $$ = aux;
+                        }
                 ;
 
 expressao_xor:
-             expressao_and 
-             | expressao_and foo_expressao_xor
+             expressao_and {$$ = $1}
+             | expressao_and foo_expressao_xor {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
              ;
 
 foo_expressao_xor:
-                 BITWISE_XOR expressao_xor
+                 BITWISE_XOR expressao_xor {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,BITWISE_XOR);
+                                $$ = aux;
+                        }
                  ;
 
 expressao_and:
-             expressao_igualdade
-             | expressao_igualdade foo_expressao_and
+             expressao_igualdade {$$ = $1}
+             | expressao_igualdade foo_expressao_and {
+                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        $$ = aux;
+                }
              ;
 
 foo_expressao_and:
-                 BITWISE_AND expressao_and 
+                 BITWISE_AND expressao_and {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,BITWISE_AND);
+                                $$ = aux;
+                        }
                  ;
 
 expressao_igualdade:
-                   expressao_relacional
-                   | expressao_relacional foo_expressao_igualdade
+                   expressao_relacional {$$ = $1}
+                   | expressao_relacional foo_expressao_igualdade {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                    ;
 
 foo_expressao_igualdade:
-                       EQUAL expressao_igualdade 
-                       | NOT_EQUAL expressao_igualdade
+                       EQUAL expressao_igualdade {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,EQUAL);
+                                $$ = aux;
+                        }
+                       | NOT_EQUAL expressao_igualdade {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,NOT_EQUAL);
+                                $$ = aux;
+                        }
                        ;
 
 expressao_relacional:
-                    expressao_shift
-                    | expressao_shift foo_expressao_relacional
+                    expressao_shift {$$ = $1}
+                    | expressao_shift foo_expressao_relacional {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                     ;
 
 foo_expressao_relacional:
-                        LESS_THAN expressao_relacional
-                        | LESS_EQUAL expressao_relacional
-                        | GREATER_THAN expressao_relacional
-                        | GREATER_EQUAL expressao_relacional
+                        LESS_THAN expressao_relacional {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,LESS_THAN);
+                                        $$ = aux;
+                                }
+                        | LESS_EQUAL expressao_relacional {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,LESS_EQUAL);
+                                        $$ = aux;
+                                }
+                        | GREATER_THAN expressao_relacional {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,GREATER_THAN);
+                                        $$ = aux;
+                                }
+                        | GREATER_EQUAL expressao_relacional {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,GREATER_EQUAL);
+                                        $$ = aux;
+                                }
                         ;
 
 expressao_shift:
-               expressao_aditiva
-               | expressao_aditiva foo_expressao_shift
+               expressao_aditiva {$$ = $1}
+               | expressao_aditiva foo_expressao_shift {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                ;
 
 foo_expressao_shift:
-                   R_SHIFT expressao_shift 
-                   | L_SHIFT expressao_shift
+                   R_SHIFT expressao_shift {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,R_SHIFT);
+                                $$ = aux;
+                        }
+                   | L_SHIFT expressao_shift {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,L_SHIFT);
+                                $$ = aux;
+                        }
                    ;
 
 expressao_aditiva:
-                 expressao_multiplicativa
-                 | expressao_multiplicativa foo_expressao_aditiva
+                 expressao_multiplicativa {$$ = $1}
+                 | expressao_multiplicativa foo_expressao_aditiva {
+                                TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                $$ = aux;
+                        }
                  ;
 
 foo_expressao_aditiva:
-                     PLUS expressao_aditiva
-                     | MINUS expressao_aditiva
+                     PLUS expressao_aditiva {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,PLUS);
+                                $$ = aux;
+                        }
+                     | MINUS expressao_aditiva {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,MINUS);
+                                $$ = aux;
+                        }
                      ;
 
 expressao_multiplicativa:
-                        expressao_unaria
-                        | expressao_unaria foo_expressao_multiplicativa
+                        expressao_unaria {$$ = $1}
+                        | expressao_unaria foo_expressao_multiplicativa {
+                                        TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                        $$ = aux;
+                                }
                         ;
 
 foo_expressao_multiplicativa:
-                            REMAINDER expressao_multiplicativa
-                            | DIV expressao_multiplicativa
-                            | MULTIPLY expressao_multiplicativa
+                            REMAINDER expressao_multiplicativa {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,REMAINDER);
+                                        $$ = aux;
+                                }
+                            | MULTIPLY expressao_multiplicativa {
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setType(aux,MULTIPLY);
+                                        $$ = aux;
+                                }
                             ;
 
 expressao_unaria:
-                IDENTIFIER INC 
-                | IDENTIFIER
-                | IDENTIFIER DEC 
-                | numero
-                | CARACTER
-                | IDENTIFIER L_PAREN foo_expressao_unaria R_PAREN
-                | L_PAREN expressao R_PAREN
-                | NOT expressao_unaria
-                | BITWISE_NOT expressao_unaria
-                | MINUS expressao_unaria
-                | PLUS expressao_unaria
+                IDENTIFIER INC {
+                                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                                setType(aux,INC);
+                                $$ = aux;
+                        }
+                | IDENTIFIER {$$ = NULL}
+                | IDENTIFIER DEC {
+                                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                                setType(aux,DEC);
+                                $$ = aux;
+                        }
+                | numero {$$ = $1}
+                | CARACTER {
+                                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                                setType(aux,CARACTER);
+                                $$ = aux;
+                        }
+                | IDENTIFIER L_PAREN foo_expressao_unaria R_PAREN {$$ = $3}
+                | L_PAREN expressao R_PAREN {$$ = $2}
+                | NOT expressao_unaria {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,NOT);
+                                $$ = aux;
+                        }
+                | BITWISE_NOT expressao_unaria {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,BITWISE_NOT);
+                                $$ = aux;
+                        }
+                | MINUS expressao_unaria {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,MINUS);
+                                $$ = aux;
+                        }
+                | PLUS expressao_unaria {
+                                TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                setType(aux,PLUS);
+                                $$ = aux;
+                        }
                 ;
 
 foo_expressao_unaria:
-                    expressao 
-                    | expressao COMMA foo_expressao_unaria
-
+                    expressao {$$ = $1}
+                    | expressao COMMA foo_expressao_unaria {
+                                TreeNode* aux = newNode($1,$3,NULL,NULL);
+                                $$ = aux;
+                        }
+                    ;
 
 numero:
-      NUM_INTEGER
-      | NUM_HEXA
-      | NUM_OCTAL
+      NUM_INTEGER {
+                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                setType(aux,NUM_INTEGER);
+                $$ = aux;
+        }
+      | NUM_HEXA {
+                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                setType(aux,NUM_HEXA);
+                $$ = aux;
+        }
+      | NUM_OCTAL {
+                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                setType(aux,NUM_OCTAL);
+                $$ = aux;
+        }
       ;
 
 %%

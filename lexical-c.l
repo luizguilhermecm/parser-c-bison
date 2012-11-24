@@ -1,5 +1,6 @@
 %option noyywrap
 %{
+#include <node.h>
 #include <syntax-c.tab.h>
 
         int i = 0;
@@ -43,7 +44,6 @@
 \"(\\.|\"\"|[^"\n])*\"   { printf("STRING(%s)\n",yytext)      ; chars += strlen(yytext) ; return STRING ;}
 [a-zA-Z_][a-zA-Z0-9_]*   { printf("IDENTIFIER(%s)\n",yytext)  ; chars += strlen(yytext) ; return IDENTIFIER ;}
 
-"/"  { printf("DIV\n")                 ;  chars += strlen(yytext); return DIV                 ;}
 "+"  { printf("PLUS\n")                ;  chars += strlen(yytext); return PLUS                ;}
 "-"  { printf("MINUS\n")               ;  chars += strlen(yytext); return MINUS               ;}
 "*"  { printf("MULTIPLY\n")            ;  chars += strlen(yytext); return MULTIPLY            ;}
