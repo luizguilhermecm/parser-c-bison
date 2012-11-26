@@ -14,8 +14,8 @@ void inOrder(TreeNode* aux)
                 inOrder(aux->three);
                 inOrder(aux->four);
                 printf("%d - ", aux->node_type);
-                if(aux->node_type == DEFINE){
-                        printf("DEFINE");
+                if(aux->node_id != NULL){
+                        printf("IDE %s", aux->node_id);
                 }
         }
 }
@@ -24,6 +24,7 @@ void inOrder(TreeNode* aux)
 
 %union{
         TreeNode* ast;
+        char* id;
 }
 
 %token VOID
@@ -83,6 +84,7 @@ void inOrder(TreeNode* aux)
 %token STRING
 %token IDENTIFIER
 
+%type <id> IDENTIFIER
 %type <ast> programa
 %type <ast> declaracoes
 %type <ast> funcao
@@ -161,6 +163,8 @@ declaracoes:
            NUMBER_SIGN DEFINE IDENTIFIER expressao {
                         TreeNode* aux = newNode($4, NULL, NULL, NULL);
                         setType(aux, DEFINE);
+                        setId(aux, $3);
+                        printf("XXXXXXXXXXXXXXXXXXXXXXXX %s", $3);
                         $$ = aux;
                 }
            | declaracao_variaveis {$$ = $1}
@@ -170,10 +174,12 @@ declaracoes:
 funcao:
       tipo IDENTIFIER parametros L_CURLY_BRACKET comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,NULL);
+                        setId(aux,$2);
                         $$ = aux;
                 }
       | tipo IDENTIFIER parametros L_CURLY_BRACKET foo_funcao comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,$6);
+                        setId(aux,$2);
                         $$ = aux;
                 }
       ; 
@@ -194,9 +200,14 @@ declaracao_variaveis:
                     ;
 
 foo_declaracao_variaveis:
-                        IDENTIFIER bar_declaracao_variaveis{$$ = $2}
+                        IDENTIFIER bar_declaracao_variaveis{
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setId(aux,$1);
+                                        $$ = aux;
+                                }
                         | IDENTIFIER ASSIGN expressao bar_declaracao_variaveis{
                                         TreeNode* aux = newNode($3,$4,NULL,NULL);
+                                        setId(aux,$1);
                                         $$ = aux;
                                 }
                         ;
@@ -209,6 +220,7 @@ bar_declaracao_variaveis:
 declaracao_prototipos:
                    tipo IDENTIFIER parametros SEMICOLON{
                                 TreeNode* aux = newNode($1,$3,NULL,NULL);
+                                setId(aux,$2);
                                 $$ = aux;
                         }
                    ;
@@ -219,9 +231,14 @@ parametros:
           ;
 
 foo_parametros:
-              tipo IDENTIFIER{$$ = $1}
+              tipo IDENTIFIER{
+                        TreeNode* aux = newNode($1,NULL,NULL,NULL);
+                        setId(aux,$2);
+                        $$ = aux;
+                }
               | tipo IDENTIFIER COMMA foo_parametros{
                         TreeNode* aux = newNode($1,$4,NULL,NULL);
+                        setId(aux,$2);
                         $$ = aux;
                 }
               ;

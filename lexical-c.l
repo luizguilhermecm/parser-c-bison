@@ -42,7 +42,7 @@
 
 \'([^\']|\\.)?\'         { printf("CARACTER(%s)\n",yytext)    ; chars += strlen(yytext) ; return CARACTER ;}
 \"(\\.|\"\"|[^"\n])*\"   { printf("STRING(%s)\n",yytext)      ; chars += strlen(yytext) ; return STRING ;}
-[a-zA-Z_][a-zA-Z0-9_]*   { printf("IDENTIFIER(%s)\n",yytext)  ; chars += strlen(yytext) ; return IDENTIFIER ;}
+[a-zA-Z_][a-zA-Z0-9_]*   { printf("IDENTIFIER(%s)\n",yytext)  ; chars += strlen(yytext); yylval.id = strdup(yytext); return IDENTIFIER ;}
 
 "+"  { printf("PLUS\n")                ;  chars += strlen(yytext); return PLUS                ;}
 "-"  { printf("MINUS\n")               ;  chars += strlen(yytext); return MINUS               ;}

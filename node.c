@@ -12,6 +12,15 @@ struct Node *newNode(TreeNode* _one, TreeNode* _two, TreeNode* _three, TreeNode*
 
         return aux;
 }
+void setId(TreeNode* _node, char* id)
+{
+        _node->node_id = id;
+}
+
+char * getId(TreeNode* _node)
+{
+        return _node->node_id;
+}
 
 void setType(TreeNode* _node, int type)
 {

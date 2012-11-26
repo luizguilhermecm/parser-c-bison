@@ -11,6 +11,7 @@ struct Node
 
         int value;
         int node_type;
+        char * node_id;
 };
 
 
@@ -20,3 +21,5 @@ struct Node *newNode(TreeNode* _one,
                  TreeNode* _four);
 
 void setType(TreeNode* _node, int type);
+void setId(TreeNode* _node, char* id);
+char * getId(TreeNode* _node);
