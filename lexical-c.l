@@ -11,9 +11,9 @@
 %%
 [\n] { lines++; chars = 1; } 
 
-"void"    { printf("VOID\n")    ;  chars += strlen(yytext); return VOID   ;}
-"int"     { printf("INT\n")     ;  chars += strlen(yytext); return INT    ;}
-"char"    { printf("CHAR\n")    ;  chars += strlen(yytext); return CHAR   ;}
+"void"    { printf("VOID\n")    ;  chars += strlen(yytext); yylval.tipo = strdup(yytext);  return VOID   ;}
+"int"     { printf("INT\n")     ;  chars += strlen(yytext); yylval.tipo = strdup(yytext);  return INT    ;}
+"char"    { printf("CHAR\n")    ;  chars += strlen(yytext); yylval.tipo = strdup(yytext);  return CHAR   ;}
 "return"  { printf("RETURN\n")  ;  chars += strlen(yytext); return RETURN ;}
 "break"   { printf("BREAK\n")   ;  chars += strlen(yytext); return BREAK  ;}
 "switch"  { printf("SWITCH\n")  ;  chars += strlen(yytext); return SWITCH ;}

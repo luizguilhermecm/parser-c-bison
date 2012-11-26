@@ -11,7 +11,8 @@ struct Node
 
         int value;
         int node_type;
-        char * node_id;
+        char * lval_id;
+        char * lval_tipo;
 };
 
 
@@ -22,4 +23,6 @@ struct Node *newNode(TreeNode* _one,
 
 void setType(TreeNode* _node, int type);
 void setId(TreeNode* _node, char* id);
+void setTipo(TreeNode* _node, char* tipo);
 char * getId(TreeNode* _node);
+char * getTipo(TreeNode* _node);

@@ -2,9 +2,14 @@
 
 #include <stdio.h>
 #include <node.h>
+#include "HashTable.h"
 extern int yylex();
 
 TreeNode* AST = NULL;
+
+HashTable* HT = NULL;
+HashTable* inUse = NULL;
+
 int count = 0;
 void inOrder(TreeNode* aux)
 {
@@ -13,9 +18,31 @@ void inOrder(TreeNode* aux)
                 inOrder(aux->two);
                 inOrder(aux->three);
                 inOrder(aux->four);
-                printf("%d - ", aux->node_type);
-                if(aux->node_id != NULL){
-                        printf("IDE %s", aux->node_id);
+                if(aux->node_type != -1){
+                        printf("%d - ", aux->node_type);
+                }
+                if(aux->lval_id != NULL){
+                        printf("ID %s", aux->lval_id);
+                }
+                if(aux->lval_tipo != NULL){
+                        printf("TIPO %s", aux->lval_tipo);
+                }
+        }
+}
+void PrintHT(HashTable* foo)
+{
+        printf("\n\n\n");
+        printf("-----------------");
+        printf("\nHashTable: %s", foo->name);
+        if(foo != NULL){
+                printf("HT nao NULL");
+                int i;
+                for(i = 0; i < PRIME; i++){
+                        if(foo->Bucket[i]){
+                                printf("\nidentifier = %s", foo->Bucket[i]->identifier);
+                                printf("\nbucket = %d", i);
+                                printf("\ntipo = %s", foo->Bucket[i]->type);
+                        }
                 }
         }
 }
@@ -25,6 +52,7 @@ void inOrder(TreeNode* aux)
 %union{
         TreeNode* ast;
         char* id;
+        char* tipo;
 }
 
 %token VOID
@@ -85,6 +113,9 @@ void inOrder(TreeNode* aux)
 %token IDENTIFIER
 
 %type <id> IDENTIFIER
+%type <tipo> INT
+%type <tipo> VOID
+%type <tipo> CHAR
 %type <ast> programa
 %type <ast> declaracoes
 %type <ast> funcao
@@ -137,25 +168,44 @@ void inOrder(TreeNode* aux)
 first:
      programa { 
                 AST = $1;
+
                 if(AST){
                         inOrder(AST);
                 }
                 else 
                         printf("erro");
+
+                if(HT){
+                        PrintHT(HT);
+                        HashTable * print = HT;
+                        while(print->FuncList){
+                                print = print->FuncList;
+                                PrintHT(print);
+                        }
+
+                }
                 
         }
      ;
 
 programa:
-        declaracoes {$$ = $1}
-        | funcao {$$ = $1}
+        declaracoes {
+                        $$ = $1;
+                        inUse = HT;
+                }
+        | funcao {
+                        inUse = HT;
+                        $$ = $1;
+                }
         | declaracoes programa {
                         TreeNode* aux = newNode($1,$2,NULL,NULL);
                         $$ = aux;
+                        inUse = HT;
                 }
         | funcao programa {
                         TreeNode* aux = newNode($1,$2,NULL,NULL);
                         $$ = aux;
+                        inUse = HT;
                 }
         ;
 
@@ -164,23 +214,34 @@ declaracoes:
                         TreeNode* aux = newNode($4, NULL, NULL, NULL);
                         setType(aux, DEFINE);
                         setId(aux, $3);
-                        printf("XXXXXXXXXXXXXXXXXXXXXXXX %s", $3);
                         $$ = aux;
+                        inUse = HT;
+                        newHashNode(inUse,"DEFINE",$3);
                 }
-           | declaracao_variaveis {$$ = $1}
-           | declaracao_prototipos {$$ = $1}
+           | declaracao_variaveis {
+                        $$ = $1;
+                        inUse = HT;
+                }
+           | declaracao_prototipos {
+                        $$ = $1;
+                        inUse = HT;
+                }
            ;
 
 funcao:
       tipo IDENTIFIER parametros L_CURLY_BRACKET comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,NULL);
+                        setTipo(aux,getTipo($1));
                         setId(aux,$2);
                         $$ = aux;
+                        inUse = newFunc(inUse,getTipo($1),$2);
                 }
       | tipo IDENTIFIER parametros L_CURLY_BRACKET foo_funcao comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,$6);
                         setId(aux,$2);
+                        setTipo(aux,getTipo($1));
                         $$ = aux;
+                        inUse = newFunc(inUse,getTipo($1),$2);
                 }
       ; 
  
@@ -195,7 +256,9 @@ foo_funcao:
 declaracao_variaveis:
                     tipo foo_declaracao_variaveis {
                                 TreeNode* aux = newNode($1,$2,NULL,NULL);
+                                setTipo(aux,getTipo($1));
                                 $$ = aux;
+                                newHashNode(inUse,getTipo($1),getId($2));
                         }
                     ;
 
@@ -235,18 +298,32 @@ foo_parametros:
                         TreeNode* aux = newNode($1,NULL,NULL,NULL);
                         setId(aux,$2);
                         $$ = aux;
+                        newHashNode(inUse,getTipo($1),$2);
                 }
               | tipo IDENTIFIER COMMA foo_parametros{
                         TreeNode* aux = newNode($1,$4,NULL,NULL);
                         setId(aux,$2);
                         $$ = aux;
+                        newHashNode(inUse,getTipo($1),$2);
                 }
               ;
 
 tipo:
-    INT {$$ = NULL}
-    | CHAR {$$ = NULL}
-    | VOID {$$ = NULL}
+    INT {
+                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                setTipo(aux,$1);
+                $$ = aux;
+        }
+    | CHAR {
+                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                setTipo(aux,$1);
+                $$ = aux;
+        }
+    | VOID {
+                TreeNode* aux = newNode(NULL,NULL,NULL,NULL);
+                setTipo(aux,$1);
+                $$ = aux;
+        }
     ;
 
 comandos:
@@ -258,7 +335,10 @@ comandos:
         ;
 
 bloco:
-     L_CURLY_BRACKET comandos R_BRACE_BRACKET {$$ = $2}
+     L_CURLY_BRACKET comandos R_BRACE_BRACKET {
+                $$ = $2;
+                inUse = HT;        
+        }
      ;
 
 lista_comandos:
@@ -647,6 +727,8 @@ yyerror(char *s)
 
 int main(int argc, char **argv)
 {
+        HT = newHashTable("teste");
+        inUse = HT;
         printf("%d", yyparse());
 }
 

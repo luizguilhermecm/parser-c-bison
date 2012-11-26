@@ -14,12 +14,22 @@ struct Node *newNode(TreeNode* _one, TreeNode* _two, TreeNode* _three, TreeNode*
 }
 void setId(TreeNode* _node, char* id)
 {
-        _node->node_id = id;
+        _node->lval_id = id;
 }
 
 char * getId(TreeNode* _node)
 {
-        return _node->node_id;
+        return _node->lval_id;
+}
+
+void setTipo(TreeNode* _node, char* tipo)
+{
+        _node->lval_tipo = tipo;
+}
+
+char * getTipo(TreeNode* _node)
+{
+        return _node->lval_tipo;
 }
 
 void setType(TreeNode* _node, int type)
