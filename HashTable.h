@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PRIME 253
+#define PRIME 211
 
 typedef struct HashTable HashTable;
 typedef struct HashNode HashNode;
@@ -12,20 +12,19 @@ struct HashTable
         char* name;
         HashTable* FuncList;
         char* func_type;
-        int numFunc;
-        int numArgs;
 };
 
 struct HashNode
 {
         char* type;
         char* identifier;
+        char* isArg;
         HashNode* next;
 };
 
 struct HashTable * newHashTable(char* aux);
 
-void newHashNode(HashTable* aux, char* t, char* id);
+void newHashNode(HashTable* aux, char* t, char* id, char* isArg);
 
 struct HashTable * newFunc(HashTable* aux, char* t, char* id);
 

@@ -4,13 +4,11 @@ struct HashTable* newHashTable(char* aux)
 {
         HashTable* foo = (HashTable*)malloc(sizeof(struct HashTable));
         foo->name = aux;
-        foo->numFunc = 0;
-        foo->numArgs = 0;
 
         return foo;
 }
 
-void newHashNode(HashTable* aux, char* t, char* id)
+void newHashNode(HashTable* aux, char* t, char* id, char* arg)
 {
 
         int ascValue = 0;
@@ -32,12 +30,14 @@ void newHashNode(HashTable* aux, char* t, char* id)
                 newBucket = (HashNode*)malloc(sizeof(struct HashNode));
                 newBucket->type = t;
                 newBucket->identifier = id;
+                newBucket->isArg = arg;
                 newBucket->next = aux->Bucket[hashValue];
                 aux->Bucket[hashValue] = newBucket;
        }else{
                 newBucket = (HashNode*)malloc(sizeof(struct HashNode));
                 newBucket->type = t;
                 newBucket->identifier = id;
+                newBucket->isArg = arg;
                 newBucket->next = NULL;
                 aux->Bucket[hashValue] = newBucket;
        }
@@ -60,7 +60,7 @@ struct HashTable* newFunc(HashTable* aux, char* t, char* id)
         foo->FuncList = aux->FuncList;
         aux->FuncList = foo;
         foo->func_type = t;
-        newHashNode(aux,t,id);
+        newHashNode(aux,t,id,"FUNC");
 
         return foo;
 }

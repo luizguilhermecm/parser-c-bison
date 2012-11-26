@@ -35,13 +35,15 @@ void PrintHT(HashTable* foo)
         printf("-----------------");
         printf("\nHashTable: %s", foo->name);
         if(foo != NULL){
-                printf("HT nao NULL");
                 int i;
                 for(i = 0; i < PRIME; i++){
                         if(foo->Bucket[i]){
+                                printf("\n-----------------");
                                 printf("\nidentifier = %s", foo->Bucket[i]->identifier);
-                                printf("\nbucket = %d", i);
                                 printf("\ntipo = %s", foo->Bucket[i]->type);
+                                printf("\ntipo = %s", foo->Bucket[i]->isArg);
+                                printf("\nbucket = %d", i);
+                                printf("\n-----------------");
                         }
                 }
         }
@@ -191,21 +193,20 @@ first:
 programa:
         declaracoes {
                         $$ = $1;
-                        inUse = HT;
+                        
                 }
         | funcao {
-                        inUse = HT;
                         $$ = $1;
                 }
         | declaracoes programa {
                         TreeNode* aux = newNode($1,$2,NULL,NULL);
                         $$ = aux;
-                        inUse = HT;
+                        
                 }
         | funcao programa {
                         TreeNode* aux = newNode($1,$2,NULL,NULL);
                         $$ = aux;
-                        inUse = HT;
+                        
                 }
         ;
 
@@ -216,15 +217,15 @@ declaracoes:
                         setId(aux, $3);
                         $$ = aux;
                         inUse = HT;
-                        newHashNode(inUse,"DEFINE",$3);
+                        newHashNode(inUse,"DEFINE",$3,NULL);
                 }
            | declaracao_variaveis {
                         $$ = $1;
-                        inUse = HT;
+                        
                 }
            | declaracao_prototipos {
                         $$ = $1;
-                        inUse = HT;
+                        
                 }
            ;
 
@@ -235,6 +236,7 @@ funcao:
                         setId(aux,$2);
                         $$ = aux;
                         inUse = newFunc(inUse,getTipo($1),$2);
+                        inUse = HT;
                 }
       | tipo IDENTIFIER parametros L_CURLY_BRACKET foo_funcao comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,$6);
@@ -242,6 +244,7 @@ funcao:
                         setTipo(aux,getTipo($1));
                         $$ = aux;
                         inUse = newFunc(inUse,getTipo($1),$2);
+                        inUse = HT;
                 }
       ; 
  
@@ -258,7 +261,7 @@ declaracao_variaveis:
                                 TreeNode* aux = newNode($1,$2,NULL,NULL);
                                 setTipo(aux,getTipo($1));
                                 $$ = aux;
-                                newHashNode(inUse,getTipo($1),getId($2));
+                                newHashNode(inUse,getTipo($1),getId($2),"VAR");
                         }
                     ;
 
@@ -276,7 +279,10 @@ foo_declaracao_variaveis:
                         ;
 
 bar_declaracao_variaveis:
-                         COMMA foo_declaracao_variaveis{$$ = $2}
+                         COMMA foo_declaracao_variaveis{
+                                        $$ = $2;
+                                        newHashNode(inUse,getTipo($2),getId($2),"VAR");
+                                }
                         | SEMICOLON{$$ = NULL}
                         ;
 
@@ -285,6 +291,7 @@ declaracao_prototipos:
                                 TreeNode* aux = newNode($1,$3,NULL,NULL);
                                 setId(aux,$2);
                                 $$ = aux;
+                                inUse = newFunc(HT,getTipo($1),$2);
                         }
                    ;
 
@@ -298,13 +305,13 @@ foo_parametros:
                         TreeNode* aux = newNode($1,NULL,NULL,NULL);
                         setId(aux,$2);
                         $$ = aux;
-                        newHashNode(inUse,getTipo($1),$2);
+                        newHashNode(inUse->FuncList,getTipo($1),$2, "ARG");
                 }
               | tipo IDENTIFIER COMMA foo_parametros{
                         TreeNode* aux = newNode($1,$4,NULL,NULL);
                         setId(aux,$2);
                         $$ = aux;
-                        newHashNode(inUse,getTipo($1),$2);
+                        newHashNode(inUse->FuncList,getTipo($1),$2, "ARG");
                 }
               ;
 
@@ -337,7 +344,7 @@ comandos:
 bloco:
      L_CURLY_BRACKET comandos R_BRACE_BRACKET {
                 $$ = $2;
-                inUse = HT;        
+                        
         }
      ;
 
@@ -727,9 +734,16 @@ yyerror(char *s)
 
 int main(int argc, char **argv)
 {
-        HT = newHashTable("teste");
+        HT = newHashTable("GLOBAL");
         inUse = HT;
+        
         printf("%d", yyparse());
+
+        HashTable* teste = HT;
+        while (teste){
+                printf("%s -- ", teste->name);
+                teste = teste->FuncList;
+        }
 }
 
 
