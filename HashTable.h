@@ -26,6 +26,10 @@ struct HashTable * newHashTable(char* aux);
 
 void newHashNode(HashTable* aux, char* t, char* id, char* isArg);
 
+struct HashNode * newHNode(char* t, char* id, char* isArg);
+
 struct HashTable * newFunc(HashTable* aux, char* t, char* id);
 
 void hasEqual(HashNode*, char*);
+
+void insertNode(HashTable* aux, HashNode* hnode);

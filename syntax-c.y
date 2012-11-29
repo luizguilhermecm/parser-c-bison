@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <node.h>
-#include "HashTable.h"
 extern int yylex();
 
 TreeNode* AST = NULL;
@@ -14,6 +13,20 @@ int count = 0;
 void inOrder(TreeNode* aux)
 {
         if(aux != NULL){
+                if (aux->node_type == R_PAREN){
+                        inUse = HT;
+                }
+                if (aux->hnode){
+                        if(aux->node_type == L_CURLY_BRACKET){
+                                insertNode(inUse,aux->hnode); 
+                                inUse = newFunc(inUse, aux->lval_tipo, aux->lval_id);
+                                HT->FuncList = inUse;
+                        }
+                        else if(aux->node_type == R_BRACE_BRACKET){
+                                insertNode(inUse,aux->hnode);
+                        }
+                        else insertNode(inUse,aux->hnode); 
+                }
                 inOrder(aux->one);
                 inOrder(aux->two);
                 inOrder(aux->three);
@@ -215,9 +228,9 @@ declaracoes:
                         TreeNode* aux = newNode($4, NULL, NULL, NULL);
                         setType(aux, DEFINE);
                         setId(aux, $3);
+                        setTipo(aux,"DEFINE");
+                        setHnode(aux,newHNode(getTipo(aux),getId(aux),"DEF"));
                         $$ = aux;
-                        inUse = HT;
-                        newHashNode(inUse,"DEFINE",$3,NULL);
                 }
            | declaracao_variaveis {
                         $$ = $1;
@@ -232,19 +245,19 @@ declaracoes:
 funcao:
       tipo IDENTIFIER parametros L_CURLY_BRACKET comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,NULL);
+                        setType(aux, L_CURLY_BRACKET);
                         setTipo(aux,getTipo($1));
                         setId(aux,$2);
+                        setHnode(aux,newHNode(getTipo(aux),getId(aux),"FUNCAO"));
                         $$ = aux;
-                        inUse = newFunc(inUse,getTipo($1),$2);
-                        inUse = HT;
                 }
       | tipo IDENTIFIER parametros L_CURLY_BRACKET foo_funcao comandos R_BRACE_BRACKET {
                         TreeNode* aux = newNode($1,$3,$5,$6);
+                        setType(aux, L_CURLY_BRACKET);
                         setId(aux,$2);
                         setTipo(aux,getTipo($1));
+                        setHnode(aux,newHNode(getTipo(aux),getId(aux),"FUNCAO"));
                         $$ = aux;
-                        inUse = newFunc(inUse,getTipo($1),$2);
-                        inUse = HT;
                 }
       ; 
  
@@ -260,8 +273,9 @@ declaracao_variaveis:
                     tipo foo_declaracao_variaveis {
                                 TreeNode* aux = newNode($1,$2,NULL,NULL);
                                 setTipo(aux,getTipo($1));
+                                setId(aux,getId($2));
+                                setHnode(aux,newHNode(getTipo(aux),getId(aux),"VAR"));
                                 $$ = aux;
-                                newHashNode(inUse,getTipo($1),getId($2),"VAR");
                         }
                     ;
 
@@ -269,6 +283,7 @@ foo_declaracao_variaveis:
                         IDENTIFIER bar_declaracao_variaveis{
                                         TreeNode* aux = newNode($2,NULL,NULL,NULL);
                                         setId(aux,$1);
+                                        setHnode(aux,newHNode(getTipo(aux),getId(aux),"VAR"));
                                         $$ = aux;
                                 }
                         | IDENTIFIER ASSIGN expressao bar_declaracao_variaveis{
@@ -280,8 +295,9 @@ foo_declaracao_variaveis:
 
 bar_declaracao_variaveis:
                          COMMA foo_declaracao_variaveis{
-                                        $$ = $2;
-                                        newHashNode(inUse,getTipo($2),getId($2),"VAR");
+                                        TreeNode* aux = newNode($2,NULL,NULL,NULL);
+                                        setHnode(aux,newHNode(getTipo($2),getId($2),"VAR"));
+                                        $$ = aux;
                                 }
                         | SEMICOLON{$$ = NULL}
                         ;
@@ -289,9 +305,11 @@ bar_declaracao_variaveis:
 declaracao_prototipos:
                    tipo IDENTIFIER parametros SEMICOLON{
                                 TreeNode* aux = newNode($1,$3,NULL,NULL);
+                                setType(aux, L_CURLY_BRACKET);
+                                setTipo(aux,getTipo($1));
                                 setId(aux,$2);
+                                setHnode(aux,newHNode(getTipo(aux),getId(aux),"PARAM"));
                                 $$ = aux;
-                                inUse = newFunc(HT,getTipo($1),$2);
                         }
                    ;
 
@@ -303,15 +321,19 @@ parametros:
 foo_parametros:
               tipo IDENTIFIER{
                         TreeNode* aux = newNode($1,NULL,NULL,NULL);
+                        setType(aux, R_BRACE_BRACKET);
+                        setTipo(aux,getTipo($1));
                         setId(aux,$2);
+                        setHnode(aux,newHNode(getTipo(aux),getId(aux),"PARAM"));
                         $$ = aux;
-                        newHashNode(inUse->FuncList,getTipo($1),$2, "ARG");
                 }
               | tipo IDENTIFIER COMMA foo_parametros{
                         TreeNode* aux = newNode($1,$4,NULL,NULL);
+                        setType(aux, R_BRACE_BRACKET);
+                        setTipo(aux,getTipo($1));
                         setId(aux,$2);
+                        setHnode(aux,newHNode(getTipo(aux),getId(aux),"PARAM"));
                         $$ = aux;
-                        newHashNode(inUse->FuncList,getTipo($1),$2, "ARG");
                 }
               ;
 
@@ -337,6 +359,7 @@ comandos:
         lista_comandos{$$ = $1}
         | lista_comandos comandos {
                         TreeNode* aux = newNode($1,$2,NULL,NULL);
+                        setType(aux,R_PAREN);
                         $$ = aux;
                 }
         ;

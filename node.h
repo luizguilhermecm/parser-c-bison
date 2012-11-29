@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <HashTable.h>
 
 typedef struct Node TreeNode;
 struct Node
@@ -8,6 +9,8 @@ struct Node
         TreeNode* two;
         TreeNode* three;
         TreeNode* four;
+
+        HashNode* hnode;
 
         int value;
         int node_type;
@@ -26,3 +29,6 @@ void setId(TreeNode* _node, char* id);
 void setTipo(TreeNode* _node, char* tipo);
 char * getId(TreeNode* _node);
 char * getTipo(TreeNode* _node);
+
+void setHnode(TreeNode* foo, HashNode* aux);
+struct HashNode * getHnode(TreeNode* aux);

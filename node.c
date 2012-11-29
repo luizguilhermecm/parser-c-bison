@@ -36,3 +36,13 @@ void setType(TreeNode* _node, int type)
 {
         _node->node_type = type;
 }
+
+void setHnode(TreeNode* foo, HashNode* aux)
+{
+        foo->hnode = aux;
+}
+
+struct HashNode * getHnode(TreeNode * aux)
+{
+        return aux->hnode;
+}
