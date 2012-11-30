@@ -1,8 +1,13 @@
 %{
 
+#define YYERROR_VERBOSE 1
 #include <stdio.h>
 #include <node.h>
 extern int yylex();
+
+        int i = 0;
+        int chars = 1;
+        int lines = 1;
 
 TreeNode* AST = NULL;
 
@@ -31,16 +36,7 @@ void inOrder(TreeNode* aux)
                 inOrder(aux->two);
                 inOrder(aux->three);
                 inOrder(aux->four);
-                if(aux->node_type != -1){
-                        printf("%d - ", aux->node_type);
-                }
-                if(aux->lval_id != NULL){
-                        printf("ID %s", aux->lval_id);
-                }
-                if(aux->lval_tipo != NULL){
-                        printf("TIPO %s", aux->lval_tipo);
-                }
-        }
+       }
 }
 void PrintHT(HashTable* foo)
 {
@@ -69,7 +65,6 @@ void PrintHT(HashTable* foo)
         char* id;
         char* tipo;
 }
-
 %token VOID
 %token INT
 %token CHAR
@@ -182,6 +177,8 @@ void PrintHT(HashTable* foo)
 %%
 first:
      programa { 
+        YYACCEPT;
+     /*
                 AST = $1;
 
                 if(AST){
@@ -199,7 +196,7 @@ first:
                         }
 
                 }
-                
+      */          
         }
      ;
 
@@ -752,7 +749,7 @@ numero:
 
 yyerror(char *s)
 {
-        fprintf(stderr, "error: %s \n", s);
+        fprintf(stderr, "error: %s \nline: %d\ncolumn: %d\n", s,lines,chars);
 }
 
 int main(int argc, char **argv)
@@ -760,13 +757,10 @@ int main(int argc, char **argv)
         HT = newHashTable("GLOBAL");
         inUse = HT;
         
-        printf("%d", yyparse());
-
-        HashTable* teste = HT;
-        while (teste){
-                printf("%s -- ", teste->name);
-                teste = teste->FuncList;
-        }
+        if(yyparse()){
+                printf("Rejeitou\n");
+        }else printf("Aceitou\n");
+        
 }
 
 

@@ -48,7 +48,7 @@ void hasEqual(HashNode* foo, char* id)
 {
         if(foo){
                 if(strcmp(foo->identifier,id) == 0){
-                        printf("sao iguais\n");
+                        // is equal
                 }
                 foo = foo->next;
         }       
